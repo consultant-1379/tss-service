@@ -1,0 +1,910 @@
+// ----------------------------------------------------------------------------
+// COPYRIGHT Ericsson Hewlett-Packard Telecommunications AB 1999
+//
+// The copyright to the computer program(s) herein is the property of EHPT AB,
+// Sweden. The program(s) may be used and/or copied only with the written 
+// permission from EHPT AB or in accordance with the terms and conditions 
+// stipulated in the agreement/contract under which the program(s) have been 
+// supplied. 
+// ----------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------
+//
+// Name:               TSSAdmin.idl
+//
+// Product:            TSS
+//
+// Document no:        nn/155 10-CYC 102 02
+//
+// Revision:           PB4
+//
+// Revision date:      1999-01-26
+//
+// Prepared:           EHS/VP EHSRBOD, EHSPEN
+//
+// Description:
+//
+// ----------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------
+//
+// Revision History:
+// 
+// Rev      Date            By		      Comments
+// A	    1997-09-23	    ehsrbod	      First release of TSS.
+// PB1      1998-01-30      ehsbsk            Audit added.	
+// PB2      1998-02-02      QHSJODY           Fixed compilation error.
+// PB3      1998-02-10      ehsbsk            Style,comments, An error, etc.
+//                                            nothing major
+// PB4      1999-01-14      ehspen	      Added exception DBEntryOverflow to
+//                                            method create in interfaces
+//					      AuditableItemFactory and UserAdmin,
+//					      method list,
+//					      method listTypes,
+//					      method listTaubTypes,
+//					      method createWithTaubType,
+//					      method listTimeProfiles and
+//					      method listAllowedDayCat.
+//
+//PB5      1999-09-20       ehsjhua           sequence TimeProfileList   
+//PB       2000-12-07       ehsjhua           changs for visibroker
+// ----------------------------------------------------------------------------
+
+#ifndef TSSADMIN_IDL
+#define TSSADMIN_IDL
+
+//#include <orb.idl>
+#include <TSSInternal.idl>
+
+// ----------------------------------------------------------------------------
+
+module TSSAdmin
+{
+
+  exception UserNotDefined {};
+  exception RoleNotDefined {};
+  exception TimeProfileNotDefined {};
+  
+  struct AclEntry {
+    TSSDef::TypedString initiator; // initiator.type == User or Role
+    string timeProfileId;  // Empty string means no time constraints
+  };
+
+  typedef sequence <AclEntry> ACL;
+  
+  struct NamedAclEntry {
+    TSSDef::TypedString initiator; // initiator.type == User or Role
+    string timeProfileId;  // Empty string means no time constraints
+    TSSDef::TypedString target;
+    TSSDef::TypedString activity;
+  };
+  
+  typedef sequence <NamedAclEntry> AclEntryList;
+
+  struct AclGroupEntry {
+    TSSDef::TypedString initiator; // initiator.type == User or Role
+    string timeProfileId;  // Empty string means no time constraints
+    TSSDef::TypedString targetGroup;  // The target group and activity set identifies
+    TSSDef::TypedString activitySet;  // in which ACL the entry was defined.
+  };
+
+  typedef sequence <AclGroupEntry> AclGroupEntryList;
+
+  struct TimeDateDefined {
+    boolean startTimeDefined;
+    boolean stopTimeDefined;
+    boolean startDateDefined;
+    boolean stopDateDefined;
+  };
+  
+  typedef TimeDateDefined TimeDateDefinedType;
+
+  struct TimeProfile {
+    string timeProfileId;
+    string timeProfileInfo;
+    TSSDef::Time startTime;
+    TSSDef::Time stopTime;
+    TSSDef::Date startDate;
+    TSSDef::Date stopDate;
+    string dayCat;
+    TimeDateDefinedType timeDateDefined;
+  };
+
+  struct UserData {
+    string userName;
+    string userDept;
+    string userPhone;
+    string userCity;
+    boolean auditState;
+    string userInfo;
+  };
+  
+  struct RoleElement {
+    string roleName;
+    string roleInfo;
+    boolean isReadOnly;
+  };
+  typedef sequence <RoleElement> RoleElementList;
+  
+  
+	
+typedef sequence <TimeProfile> TimeProfileList;
+
+typedef sequence <TSSDef::ActivityAdminData> ActivityAdminDataList;
+typedef sequence <TSSDef::ActivitySetAdminData> ActivitySetAdminDataList;
+// ----------------------------------------------------------------------------
+// --------------------------------------------------------------------------
+
+  interface ItemFactory {
+    void create(in TSSDef::TypedString item,
+		in string itemInfo,
+		in TSSDef::TypedString user,
+      		in TSSDef::TypedStringList privileges)
+    	  raises(TSSDef::EntryAlreadyDefined, 
+		TSSInternal::TypeNotDefined,
+                TSSInternal::DBEntryOverflow);
+
+  };
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+  interface AuditableItemFactory {
+    void create(in TSSDef::TypedString item,
+		in TSSInternal::ItemData itemData,
+		in TSSDef::TypedString user,
+		in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryAlreadyDefined,
+	     TSSInternal::TypeNotDefined,
+	     TSSInternal::DBEntryOverflow);
+
+  };
+
+// --------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+  interface ItemAdmin {
+    // Abstract base for handling authority entries
+
+    void destroy (in TSSDef::TypedString item,
+		  in TSSDef::TypedString user,
+		  in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined);
+
+    // Lists all items of the specified type
+    TSSDef::TypedStringList list(in string type)
+      raises(TSSInternal::TypeNotDefined, TSSInternal::DBEntryOverflow);
+
+    string getInfo(in TSSDef::TypedString item)
+      raises (TSSDef::EntryNotDefined);
+
+    void setInfo(in TSSDef::TypedString item,
+		 in string itemInfo,
+		 in TSSDef::TypedString user,
+		 in TSSDef::TypedStringList privileges)
+      raises (TSSDef::EntryNotDefined);
+  };
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+  interface LeafAdmin {
+    // Abstract base class for leaves (user, target and activity).
+
+    // Lists all sets the item is included in.
+    TSSDef::TypedStringList includedInSets(in TSSDef::TypedString item)
+      raises(TSSDef::EntryNotDefined);
+
+    // Updates the list of sets the item is included in
+    void update(in TSSDef::TypedString item,
+		in TSSDef::TypedStringList sets,
+		in TSSDef::TypedString user,
+		in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined,
+	     TSSInternal::SetNotDefined,
+	     TSSInternal::TypeMismatch);
+    // EntryNotDefined: The "leaf" the operation is directed against is not
+    //    defined
+    // SetNotDefined: One of the sets in the sets list is not defined.
+    // TypeMismatch: One of of the sets in the sets list is of an illegal
+    //    type.
+
+    TSSInternal::ItemData getItemData(in TSSDef::TypedString item)
+      raises (TSSDef::EntryNotDefined);
+
+    void setItemData(in TSSDef::TypedString item,
+		 in TSSInternal::ItemData itemdata,
+		 in TSSDef::TypedString user,
+		 in TSSDef::TypedStringList privileges)
+      raises (TSSDef::EntryNotDefined);
+
+
+    boolean getAuditState(in TSSDef::TypedString item)
+      raises (TSSDef::EntryNotDefined);
+
+    void setAuditState(in TSSDef::TypedString item,
+		 in boolean auditState,
+		 in TSSDef::TypedString user,
+		 in TSSDef::TypedStringList privileges)
+      raises (TSSDef::EntryNotDefined);
+  };
+
+// ----------------------------------------------------------------------------
+  interface SetAdmin {
+    // Abstract base for handling groups of authority entries
+
+    void listContents(in TSSDef::TypedString set,
+		      out TSSDef::TypedStringList items,
+		      out TSSDef::TypedStringList sets)
+      raises(TSSDef::EntryNotDefined);
+
+// ----------------------------------------------------------------------------
+    void add(in TSSDef::TypedString set,
+	     in TSSDef::TypedStringList items,
+	     in TSSDef::TypedStringList sets,
+	     in TSSDef::TypedString user,
+	     in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined, 
+	     TSSInternal::ItemAlreadyDefined, 
+	     TSSInternal::SetAlreadyDefined, 
+	     TSSInternal::ItemNotDefined, 
+	     TSSInternal::SetNotDefined,
+	     TSSInternal::TypeMismatch,
+	     TSSDef::InvalidArgument);
+    // EntryNotDefined: The "set" the operation is directed against is not
+    //    defined
+    // ItemAlreadyDefined: One of the items in the items list is already
+    //    included in the set.
+    // SetAlreadyDefined: One of the sets in the sets list is already included
+    //    in the set.
+    // ItemNotDefined: One of the items in the items list is not defined.
+    // SetNotDefined: One of the sets in the sets list is not defined.
+    // TypeMismatch: One of of the sets in the sets list or one of the items
+    //    in the items list is of an illegal type.
+
+// ----------------------------------------------------------------------------
+    void remove(in TSSDef::TypedString set,
+		in TSSDef::TypedStringList items,
+		in TSSDef::TypedStringList sets,
+		in TSSDef::TypedString user,
+		in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined, 
+	     TSSInternal::ItemNotDefined, 
+	     TSSInternal::SetNotDefined,
+	     TSSInternal::TypeMismatch);
+    // See add for exception description
+
+    // Replace existing contents with provided contents
+// ----------------------------------------------------------------------------
+    void update(in TSSDef::TypedString set,
+		in TSSDef::TypedStringList items,
+		in TSSDef::TypedStringList sets,
+		in TSSDef::TypedString user,
+		in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined, 
+	     TSSInternal::ItemNotDefined, 
+	     TSSInternal::SetNotDefined,
+	     TSSInternal::TypeMismatch,
+	     TSSDef::InvalidArgument);
+    // See add for exception description
+  };
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+  interface TypeAdmin {
+    exception ItemsDefined {};
+
+    // Create a new type
+    void createType(in string type,
+		    in string info,
+		    in TSSDef::TypedString user,
+		    in TSSDef::TypedStringList privileges)
+      raises(TSSInternal::TypeAlreadyDefined, TSSInternal::DBEntryOverflow);
+    
+// ----------------------------------------------------------------------------
+    // Remove a type
+    void removeType(in string type,
+		    in TSSDef::TypedString user,
+		    in TSSDef::TypedStringList privileges)
+      raises(ItemsDefined, TSSInternal::TypeNotDefined);
+    // ItemsDefined, there are targets and/or activities defined of this type,
+    // they must be removed before the type can be removed.
+    // TypeNotDefined, the type is not defined.
+    
+// ----------------------------------------------------------------------------
+    // Lists all defined types
+    TSSDef::StringList listTypes()
+      raises(TSSInternal::DBEntryOverflow);
+
+// ----------------------------------------------------------------------------
+    void createTaubType(in string type,
+			in string info,
+			in TSSDef::TypedString user,
+			in TSSDef::TypedStringList privileges)
+      raises(TSSInternal::TypeAlreadyDefined);
+    
+// ----------------------------------------------------------------------------
+    // Remove a type
+    void removeTaubType(in string type,
+			in TSSDef::TypedString user,
+			in TSSDef::TypedStringList privileges)
+      raises(TSSInternal::TypeNotDefined,
+	     ItemsDefined);
+    // ItemsDefined, there are activities defined of this type,
+    // they must be removed before the type can be removed.
+    // TypeNotDefined, the type is not defined.
+    
+// ----------------------------------------------------------------------------
+    // Lists all defined taub types
+    TSSDef::StringList listTaubTypes()
+      raises(TSSInternal::DBEntryOverflow);
+
+// ----------------------------------------------------------------------------
+    string getInfo (in string type)
+      raises (TSSInternal::TypeNotDefined);
+
+// ----------------------------------------------------------------------------
+    void setInfo (in string type,
+		  in string info,
+		  in TSSDef::TypedString user,
+		  in TSSDef::TypedStringList privileges)
+      raises (TSSInternal::TypeNotDefined);
+
+// ----------------------------------------------------------------------------
+    string getTaubInfo (in string type)
+      raises (TSSInternal::TypeNotDefined);
+
+// ----------------------------------------------------------------------------
+    void setTaubInfo (in string type,
+		      in string info,
+		      in TSSDef::TypedString user,
+		      in TSSDef::TypedStringList privileges)
+      raises (TSSInternal::TypeNotDefined);
+// ----------------------------------------------------------------------------
+    // Lists all defined taub types
+    TSSDef::TypeAdminDataList getAllTaubTypes()
+      raises(TSSInternal::DBEntryOverflow);
+	// Lists all defined types
+    TSSDef::TypeAdminDataList getAll()
+      raises(TSSInternal::DBEntryOverflow);
+  };
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+  interface UserAdmin : ItemAdmin, LeafAdmin {
+
+    // Create a new User
+    void create(in TSSDef::TypedString newUser,
+		in UserData userData,
+		in TSSDef::TypedString user,
+		in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryAlreadyDefined,
+	     TSSInternal::DBEntryOverflow);
+    
+// ----------------------------------------------------------------------------
+    UserData getData (in TSSDef::TypedString userToUpdate)
+      raises (TSSDef::EntryNotDefined);
+
+// ----------------------------------------------------------------------------
+    void setData (in TSSDef::TypedString userToUpdate,
+		  in UserData userData,
+		  in TSSDef::TypedString user,
+		  in TSSDef::TypedStringList privileges)
+      raises (TSSDef::EntryNotDefined);
+
+// ----------------------------------------------------------------------------
+    string getUserName(in TSSDef::TypedString user)
+      raises(TSSDef::EntryNotDefined);
+		    
+// ----------------------------------------------------------------------------
+    void setUserName(in TSSDef::TypedString userToUpdate,
+		     in string userName,
+		     in TSSDef::TypedString user,
+		     in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined);
+		    
+// ----------------------------------------------------------------------------
+    string getUserDept(in TSSDef::TypedString user)
+      raises(TSSDef::EntryNotDefined);
+		    
+// ----------------------------------------------------------------------------
+    void setUserDept(in TSSDef::TypedString userToUpdate,
+		     in string userDept,
+		     in TSSDef::TypedString user,
+		     in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined);
+		    
+// ----------------------------------------------------------------------------
+    string getUserPhone(in TSSDef::TypedString user)
+      raises(TSSDef::EntryNotDefined);
+		    
+// ----------------------------------------------------------------------------
+    void setUserPhone(in TSSDef::TypedString userToUpdate,
+		      in string userPhone,
+		      in TSSDef::TypedString user,
+		      in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined);
+		    
+// ----------------------------------------------------------------------------
+    string getUserCity(in TSSDef::TypedString user)
+      raises(TSSDef::EntryNotDefined);
+		    
+// ----------------------------------------------------------------------------
+    void setUserCity(in TSSDef::TypedString userToUpdate,
+		     in string userCity,
+		     in TSSDef::TypedString user, 
+		     in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined);
+
+// ----------------------------------------------------------------------------
+    void listUserPrivileges(in TSSDef::TypedString userQuiredAbout,
+                            out AclEntryList entryList,
+			    out AclGroupEntryList groupEntryList,
+ 			    in TSSDef::TypedString userQuirist,
+ 			    in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined);
+
+    TSSDef::UserAdminDataList getAll(in string user)
+      raises(TSSDef::EntryNotDefined);
+
+  };
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+  interface ActivityAdmin : AuditableItemFactory, ItemAdmin, LeafAdmin {
+  
+   
+    
+    // create already exists in ItemFactory.
+    void createWithTaubType(in TSSDef::TypedString item,
+			    in string taubType,
+			    in TSSInternal::ItemData itemData,
+			    in TSSDef::TypedString user,
+			    in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryAlreadyDefined,
+	     TSSInternal::TypeNotDefined,
+	     TSSInternal::TaubTypeNotDefined,
+	     TSSInternal::DBEntryOverflow);
+    
+// ----------------------------------------------------------------------------
+    string getTaubType(in TSSDef::TypedString item)
+      raises(TSSDef::EntryNotDefined);
+
+// ----------------------------------------------------------------------------
+    void setTaubType(in TSSDef::TypedString item,
+		     in string taubType,
+		     in TSSDef::TypedString user,
+		     in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined, TSSInternal::TaubTypeNotDefined);
+      
+    ActivityAdminDataList getAll(in string type)
+        raises(TSSInternal::TypeNotDefined, TSSInternal::DBEntryOverflow);
+  };
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+  interface TargetAdmin : AuditableItemFactory, ItemAdmin, LeafAdmin {
+
+    ACL getACL(in TSSDef::TypedString target,
+	       in TSSDef::TypedString activity,
+	       out AclGroupEntryList aclGroupEntryList,
+	       in TSSDef::TypedString user,
+	       in TSSDef::TypedStringList privileges)
+      raises(TSSInternal::TargetNotDefined, TSSInternal::ActivityNotDefined);
+
+// ----------------------------------------------------------------------------
+    // The update method overwrites the ACL's existing value with the provided
+    // parameter.
+    void updateACL(in TSSDef::TypedString target,
+		   in TSSDef::TypedString activity,
+                   in ACL newValue,
+		   in TSSDef::TypedString user,
+		   in TSSDef::TypedStringList privileges)
+      raises(TSSInternal::TargetNotDefined,
+	     TSSInternal::ActivityNotDefined,
+	     UserNotDefined,
+	     RoleNotDefined,
+	     TimeProfileNotDefined,
+	     TSSDef::InvalidArgument);
+    // User, Role and TimeProfileNotDefined: an ACL entry contains an undefined
+    // item.
+
+// ----------------------------------------------------------------------------
+    // The add metod adds the provided parameters to the ACL's existing value.
+    void addAclEntries(in TSSDef::TypedString target,
+		       in TSSDef::TypedString activity,
+                       in ACL newEntries,
+		       in TSSDef::TypedString user,
+		       in TSSDef::TypedStringList privileges)
+      raises(TSSInternal::TargetNotDefined,
+	     TSSInternal::ActivityNotDefined,
+	     UserNotDefined,
+	     RoleNotDefined,
+	     TimeProfileNotDefined,
+	     TSSInternal::AclEntryAlreadyDefined,
+             TSSDef::InvalidArgument);
+    // AclEntryAlreadyDefined, one of the specified acl entries is not defined.
+
+// ----------------------------------------------------------------------------
+    // The remove metod removes the provided parameters from the ACL's
+    // existing value.
+    void removeAclEntries(in TSSDef::TypedString target,
+			  in TSSDef::TypedString activity,
+                          in ACL obsoleteEntries,
+			  in TSSDef::TypedString user,
+			  in TSSDef::TypedStringList privileges)
+      raises(TSSInternal::TargetNotDefined,
+	     TSSInternal::ActivityNotDefined,
+             UserNotDefined,
+             RoleNotDefined,
+             TimeProfileNotDefined,
+	     TSSInternal::AclEntryNotDefined);
+    // AclEntryNotDefined, an ACL entry is not included in this ACL.
+
+
+    //Lists all targets
+    TSSDef::TargetAdminDataList getAll(in string type)
+        raises(TSSInternal::TypeNotDefined, TSSInternal::DBEntryOverflow);
+  };
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+  interface ActivitySetAdmin : ItemFactory, ItemAdmin, SetAdmin {
+  
+   ActivitySetAdminDataList getAll(in string type)
+        raises(TSSInternal::TypeNotDefined, TSSInternal::DBEntryOverflow);
+        
+  
+  
+    //Returns the list of activites in activity set
+	TSSDef::TypedStringList listAllActivities(in TSSDef::TypedString activitySet)
+      raises(TSSDef::EntryNotDefined);      
+	  
+    //Returns the full List of activities and activitySets in the given activity set
+	TSSDef::ParentTree listFullContents(in TSSDef::TypedString activitySet)
+      raises(TSSDef::EntryNotDefined);
+	  
+  
+  };
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+  interface TargetGroupAdmin : ItemFactory, ItemAdmin, SetAdmin {
+    ACL getACL(in TSSDef::TypedString targetGroup,
+	       in TSSDef::TypedString activitySet,
+	       in TSSDef::TypedString user,
+	       in TSSDef::TypedStringList privileges)
+      raises(TSSInternal::TargetGroupNotDefined, TSSInternal::ActivitySetNotDefined);
+// ----------------------------------------------------------------------------
+    // The update method overwrites the ACL's existing value with the provided
+    // parameter.
+    void updateACL(in TSSDef::TypedString targetGroup,
+		   in TSSDef::TypedString activitySet,
+                   in ACL newValue,
+		   in TSSDef::TypedString user,
+		   in TSSDef::TypedStringList privileges)
+      raises(TSSInternal::TargetGroupNotDefined, 
+	     TSSInternal::ActivitySetNotDefined,
+	     UserNotDefined,
+	     RoleNotDefined,
+	     TimeProfileNotDefined,
+             TSSDef::InvalidArgument);
+    // User, Role and TimeProfileNotDefined: an ACL entry contains an undefined
+    // item.
+
+// ----------------------------------------------------------------------------
+    // The add metod adds the provided parameters to the ACL's existing value.
+    void addAclEntries(in TSSDef::TypedString targetGroup,
+		       in TSSDef::TypedString activitySet,
+                       in ACL newEntries,
+		       in TSSDef::TypedString user,
+		       in TSSDef::TypedStringList privileges)
+      raises(TSSInternal::TargetGroupNotDefined, 
+             TSSInternal::ActivitySetNotDefined,
+	     UserNotDefined,
+	     RoleNotDefined,
+	     TimeProfileNotDefined,
+	     TSSInternal::AclEntryAlreadyDefined,
+             TSSDef::InvalidArgument);
+
+// ----------------------------------------------------------------------------
+    // The remove metod removes the provided parameters from the ACL's
+    // existing value.
+    void removeAclEntries(in TSSDef::TypedString targetGroup,
+			  in TSSDef::TypedString activitySet,
+                          in ACL obsoleteEntries,
+			  in TSSDef::TypedString user,
+			  in TSSDef::TypedStringList privileges)
+      raises(TSSInternal::TargetGroupNotDefined, 
+             TSSInternal::ActivitySetNotDefined,
+             UserNotDefined,
+             RoleNotDefined,
+             TimeProfileNotDefined,
+	     TSSInternal::AclEntryNotDefined);
+
+    TSSDef::TargetGroupAdminDataList getAll(in string targetType)
+      raises(TSSDef::EntryNotDefined);
+
+// ----------------------------------------------------------------------------
+    //Returns the list of targets in target group
+	TSSDef::TypedStringList listAllTargets(in TSSDef::TypedString targetGroup)
+      raises(TSSDef::EntryNotDefined);
+
+    //Returns the full List of targets and targetGroups in the given target group
+	TSSDef::ParentTree listFullContents(in TSSDef::TypedString targetGroup)
+      raises(TSSDef::EntryNotDefined);
+
+  };
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+  interface RoleAdmin : ItemFactory, ItemAdmin {
+
+    void listRolePrivileges(in TSSDef::TypedString role,
+                            out AclEntryList entryList,
+			    out AclGroupEntryList groupEntryList,
+ 			    in TSSDef::TypedString user,
+ 			    in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined);
+
+// ----------------------------------------------------------------------------
+    void listContents(in TSSDef::TypedString role,
+		      out TSSDef::TypedStringList users)
+      raises(TSSDef::EntryNotDefined);
+
+// ----------------------------------------------------------------------------
+    void add(in TSSDef::TypedString role,
+	     in TSSDef::TypedStringList users,
+	     in TSSDef::TypedString user,
+	     in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined, 
+	     TSSInternal::ItemNotDefined,
+	     TSSInternal::ItemAlreadyDefined,
+             TSSDef::InvalidArgument);
+    // EntryNotDefined: the role is not defined.
+    // ItemNotDefined: one of the users in the users list is not defined or
+    //    is not included in this role.
+    // ItemAlreadyDefined: one of the users in the users list is already member
+    //    of this role.
+
+// ----------------------------------------------------------------------------
+    void remove(in TSSDef::TypedString role,
+		in TSSDef::TypedStringList users,
+		in TSSDef::TypedString user,
+		in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined, TSSInternal::ItemNotDefined);
+
+// ----------------------------------------------------------------------------
+    // Replace existing contents with provided contents
+    void update(in TSSDef::TypedString role,
+		in TSSDef::TypedStringList users,
+		in TSSDef::TypedString user,
+		in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined, 
+             TSSInternal::ItemNotDefined,
+             TSSDef::InvalidArgument);
+
+    //Lists all roles
+    TSSDef::RoleAdminDataList getAll()
+       raises(TSSInternal::DBEntryOverflow);
+
+
+// ----------------------------------------------------------------------------
+    //creates the truncated role
+	void createTruncatedRole(in TSSDef::TypedString truncatedRole,
+         in TSSDef::TypedString parentRole,
+		 in TSSDef::TypedString targetGroup,
+		 in TSSDef::TypedString user)
+	   raises (TSSDef::EntryAlreadyDefined,
+		       TSSDef::EntryNotDefined,
+	           TSSDef::InvalidArgument);
+
+// ----------------------------------------------------------------------------
+	//lists all truncated roles
+    TSSDef::TruncatedRoleList listTruncatedRoles()  raises(TSSInternal::DBEntryOverflow);
+
+// ----------------------------------------------------------------------------
+	//lists all none truncated roles
+    TSSDef::TypedStringList listNoneTruncatedRoles() raises(TSSInternal::DBEntryOverflow);
+
+
+// ----------------------------------------------------------------------------
+	//return if a role is truncated or not
+    boolean isRoleTruncated(in TSSDef::TypedString role) raises (TSSDef::EntryNotDefined) ;
+	
+	// ----------------------------------------------------------------------------
+	//lists all UserCategories which are having the given role
+	 TSSDef::StringList includedInUserCategories(in string roleName) raises(TSSDef::EntryNotDefined);
+  };
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+  interface TimeProfileAdmin {
+
+    exception InvalidDayCat {};
+    exception InvalidTime {};
+
+// ----------------------------------------------------------------------------
+    void create(in string timeProfileId,
+                in TimeProfile data,
+		in TSSDef::TypedString user,
+		in TSSDef::TypedStringList privileges)
+      raises (TSSDef::EntryAlreadyDefined,
+	      InvalidDayCat,
+	      InvalidTime, 
+	      TSSInternal::DBEntryOverflow);
+    // DateMismatch, the start date is after the stop date.
+
+// ----------------------------------------------------------------------------
+    void remove(in string timeProfileId,
+		in TSSDef::TypedString user,
+		in TSSDef::TypedStringList privileges)
+      raises (TSSDef::EntryNotDefined);
+
+// ----------------------------------------------------------------------------
+    void update(in string timeProfileId,
+                in TimeProfile data,
+		in TSSDef::TypedString user,
+		in TSSDef::TypedStringList privileges) 
+     raises (TSSDef::EntryNotDefined,
+	      InvalidDayCat,
+	      InvalidTime);
+    // DateMismatch, the start date is after the stop date.
+
+// ----------------------------------------------------------------------------
+    TimeProfile getData(in string timeProfileId)
+      raises (TSSDef::EntryNotDefined);
+
+// ----------------------------------------------------------------------------
+    TSSDef::StringList listTimeProfiles()
+      raises(TSSInternal::DBEntryOverflow);
+
+// ----------------------------------------------------------------------------
+    TSSDef::StringList listAllowedDayCat()
+      raises(TSSInternal::DBEntryOverflow);
+  };
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+  interface AuthorizationTypeAdmin {
+
+    //For creating new Authorization types
+    void create(in string authorizationTypeName,
+        in string info,
+		in TSSDef::TypedString user)
+      raises (TSSDef::EntryAlreadyDefined,
+	      TSSInternal::DBEntryOverflow);
+// ----------------------------------------------------------------------------
+    //For deleting existing Authorization types
+    void destroy(in string authorizationTypeName,
+		in TSSDef::TypedString user)
+      raises (TSSDef::EntryNotDefined);
+// ----------------------------------------------------------------------------
+    TSSDef::SetContents add(in string authorizationTypeName,
+	     in TSSDef::TypedStringList items,
+	     in TSSDef::TypedStringList sets,
+	     in TSSDef::TypedString user)
+      raises(TSSDef::EntryNotDefined);
+    // EntryNotDefined: The "authorizationTypeName" the operation is directed
+    //against is not defined
+    //If an activity from items or an activity set from sets does not exist in TSS
+    //then it will appear in the appropriate list of the return value.
+    //If the association between the auth type and the activity or activity set already exists
+    //then nothing will happen with that element.
+
+
+// ----------------------------------------------------------------------------
+    TSSDef::SetContents remove(in string authorizationTypeName,
+		in TSSDef::TypedStringList items,
+		in TSSDef::TypedStringList sets,
+		in TSSDef::TypedString user)
+      raises(TSSDef::EntryNotDefined);
+    // EntryNotDefined: The "authorizationTypeName" the operation is directed
+    //against is not defined
+    //If an activity from items or an activity set from sets does not exist in TSS
+    //then it will appear in the appropriate list of the return value.
+    //If the association between the auth type and the activity or activity set does not exist
+    //then nothing will happen with that element.
+// ----------------------------------------------------------------------------
+    TSSDef::ListElementSequence list()
+      raises(TSSInternal::DBEntryOverflow);
+
+// ----------------------------------------------------------------------------
+    TSSDef::SetContents listContents(in string authorizationTypeName)
+      raises(TSSDef::EntryNotDefined);
+
+// ----------------------------------------------------------------------------
+	//Compares the authorized targets based on authorization_type and the allowed_targets based on the ACL-s for the given user.
+	//Returns all the ACL/ACLG entries which are not in the "authorized targets" but are in the allowed_targets.
+	void visibilitySanityCheckUser(in string user, in string authorization_type, out AclGroupEntryList aclGroupList, out AclEntryList aclList)
+	  raises(TSSDef::EntryNotDefined);
+// ----------------------------------------------------------------------------
+	//Compares the authorized targets based on authorization_type and the allowed_targets based on the ACL-s for the given role.
+	//Returns all the ACL/ACLG entries which are not in the "authorized targets" but are in the allowed_targets.
+	void visibilitySanityCheckRole(in string role, in string authorization_type, out AclGroupEntryList aclGroupList, out AclEntryList aclList)
+      raises(TSSDef::EntryNotDefined,
+			TSSDef::RoleTruncated);
+			
+// ----------------------------------------------------------------------------
+	//Compares the authorized targets based on authorization_type and the allowed_targets based on the ACL-s for the given user or role and only for the given targetgroup.
+	//Returns all the ACL/ACLG entries which are not in the "authorized targets" but are in the allowed_targets.
+	                        							
+	TSSDef::TypedStringList visibilitySanityCheckForTargetGroup(in string userorroleName, in string authorization_type, in TSSDef::TypedString targetGroup, in boolean isUser)
+      raises(TSSDef::EntryNotDefined,
+			TSSDef::RoleTruncated);
+
+  };
+
+interface UserCategoryAdmin {
+
+// ----------------------------------------------------------------------------
+    //For creating new UserCategory types
+    void create(in string userCategoryName,
+        		in string info,
+        		in TSSDef::TypedString caller_user)
+      raises (TSSDef::EntryAlreadyDefined,  // User Category is already defined
+	      	  TSSInternal::DBEntryOverflow);
+
+// ----------------------------------------------------------------------------
+    //For deleting existing UserCategory types
+    void destroy(in string userCategoryName,
+    			 in TSSDef::TypedString caller_user)
+      raises (TSSDef::EntryNotDefined, // user category is not defined
+      		  TSSDef::InvalidArgument); // user category has at least one readonly role
+
+// ----------------------------------------------------------------------------
+     //Add a user to the roles of the user category
+     void addUser
+		(in string user,
+		 in string userCategoryName,
+		 in TSSDef::TypedString caller_user )
+       raises (	TSSDef::EntryNotDefined, // user category is not defined
+	 			UserNotDefined, // User is not defined
+	 			TSSInternal::DBEntryOverflow,
+				TSSDef::InvalidArgument);
+
+// ----------------------------------------------------------------------------
+	// Add role to user category
+    void addRole(in string userCategoryName,
+	     		 in string roleName,
+	     		 in boolean onlyread,
+	     		 in TSSDef::TypedString caller_user)
+      raises(TSSDef::EntryNotDefined,  // user category or role is not defined
+	         TSSDef::EntryAlreadyDefined, // role is already member of the user category
+			 TSSDef::InvalidArgument); 
+
+
+
+// ----------------------------------------------------------------------------
+	// remove role from user category
+    void remove(in string userCategoryName,
+	     	    in string roleName,
+	     	    in TSSDef::TypedString caller_user)
+      raises(TSSDef::EntryNotDefined, // user category is not defined
+      		 TSSDef::InvalidArgument); // user category has at least one read only role
+
+// ----------------------------------------------------------------------------
+	 // Lists all defined user categories
+     TSSDef::ListElementSequence listUserCategories()
+       raises(TSSInternal::DBEntryOverflow);
+
+// ----------------------------------------------------------------------------
+     // Lists all defined roles of a user category
+     RoleElementList listRoles( in string userCategoryName)
+       raises(TSSDef::EntryNotDefined, // user category is not defined
+       		  TSSInternal::DBEntryOverflow);
+ 
+ // ----------------------------------------------------------------------------
+ 
+ 	string getInfo(in string userCategoryName) 
+ 		raises(TSSDef::EntryNotDefined);
+ 	
+ // ----------------------------------------------------------------------------     		  
+       	
+       	void setInfo(in string userCategoryName, in string info, in TSSDef::TypedString caller_user)
+		raises(TSSDef::EntryNotDefined);	  
+
+  };
+
+};
+
+// ----------------------------------------------------------------------------
+
+#endif

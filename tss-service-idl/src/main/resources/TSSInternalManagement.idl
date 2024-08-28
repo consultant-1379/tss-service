@@ -1,0 +1,40 @@
+
+// ----------------------------------------------------------------------------
+//
+// Name:               TSSInternalManagement.idl
+//
+// Description: Internal interface for misc operations
+//
+// ----------------------------------------------------------------------------
+
+
+#ifndef TSSSTARTSTOP_IDL
+#define TSSSTARTSTOP_IDL
+
+module TSSInternalManagement
+{
+
+    exception RestartFailure
+    {
+       string explanation;
+    };
+
+   // -------------------------------------
+   // Internal Start/Stop/Restart handling
+   // -------------------------------------
+   interface TSSManaged {
+     void restartWarm()
+       raises (TSSInternalManagement::RestartFailure);
+
+     // Description:
+     //    Perform a warm restart     
+   };
+};
+
+#endif
+
+
+
+
+
+

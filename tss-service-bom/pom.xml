@@ -1,0 +1,82 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.ericsson.nms.mediation</groupId>
+	<artifactId>tss-service-bom</artifactId>
+
+
+	<version>2.9.7-SNAPSHOT</version>
+
+
+	<packaging>pom</packaging>
+	<name>TSS-AccessControl BOM</name>
+	
+	<properties>
+		<maven.site.skip>true</maven.site.skip>
+		<maven.site.deploy.skip>true</maven.site.deploy.skip>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.ericsson.nms.mediation</groupId>
+				<artifactId>tss-service-api</artifactId>
+				<version>${project.version}</version>
+				<type>jar</type>
+			</dependency>
+			<dependency>
+				<groupId>com.ericsson.nms.mediation</groupId>
+				<artifactId>tss-service-common</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.ericsson.nms.mediation</groupId>
+				<artifactId>tss-service-ear</artifactId>
+				<version>${project.version}</version>
+				<type>ear</type>
+			</dependency>
+			<dependency>
+				<groupId>com.ericsson.nms.mediation</groupId>
+				<artifactId>tss-service-ejb</artifactId>
+				<version>${project.version}</version>
+				<type>ejb</type>
+			</dependency>
+			<dependency>
+				<groupId>com.ericsson.nms.mediation</groupId>
+				<artifactId>tss-service-idl</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.ericsson.nms.mediation</groupId>
+				<artifactId>tss-service-jca</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.ericsson.nms.mediation</groupId>
+				<artifactId>tss-service-jca-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.ericsson.nms.mediation</groupId>
+				<artifactId>tss-service-rar</artifactId>
+				<version>${project.version}</version>
+				<type>rar</type>
+			</dependency>
+		</dependencies>
+
+	</dependencyManagement>
+	
+	<distributionManagement>
+		<repository>
+			<id>releases</id>
+			<name>Releases</name>
+			<url>https://arm1s11-eiffel004.eiffel.gic.ericsson.se:8443/nexus/content/repositories/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>Snapshots</name>
+			<url>https://arm1s11-eiffel004.eiffel.gic.ericsson.se:8443/nexus/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+</project>

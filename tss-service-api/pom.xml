@@ -1,0 +1,109 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.ericsson.nms.mediation</groupId>
+		<artifactId>tss-service</artifactId>
+
+
+		<version>2.9.7-SNAPSHOT</version>
+
+
+	</parent>
+	<artifactId>tss-service-api</artifactId>
+	<name>tss-service-api</name>
+	<packaging>jar</packaging>
+	<description>TSS Service API module</description>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>
+				<configuration>
+					<instrumentation>
+						<excludes>
+							<exclude>com/ericsson/oss/mediation/tss/service/api/enums/**</exclude>
+						</excludes>
+					</instrumentation>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<compilerArguments>
+						<!-- must point to exact name of EJB module -->
+						<AejbModuleName>${project.parent.artifactId}-ejb</AejbModuleName>
+						<!-- must point to exact name of final deployable artifact name -->
+						<AservicePackageName>${project.parent.artifactId}-ear</AservicePackageName>
+						<!-- must point to project version -->
+						<AserviceVersion>${project.version}</AserviceVersion>
+					</compilerArguments>
+					<generatedSourcesDirectory>${project.basedir}/target/classes/sdk/</generatedSourcesDirectory>
+				</configuration>
+			</plugin>
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.codehaus.mojo
+										</groupId>
+										<artifactId>
+											build-helper-maven-plugin
+										</artifactId>
+										<versionRange>
+											[1.7,)
+										</versionRange>
+										<goals>
+											<goal>regex-property</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>com.ericsson.nms.mediation</groupId>
+			<artifactId>${project.parent.artifactId}-common</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.ericsson.oss.itpf.sdk</groupId>
+			<artifactId>sdk-core-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.ericsson.oss.itpf.sdk</groupId>
+			<artifactId>sdk-upgrade-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>javaee-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.ericsson.oss.itpf.sdk</groupId>
+			<artifactId>sdk-maven-plugin</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+	</dependencies>
+</project>

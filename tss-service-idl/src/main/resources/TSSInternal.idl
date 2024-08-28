@@ -1,0 +1,174 @@
+//-----------------------------------------------------------------------------
+// COPYRIGHT Ericsson Hewlett-Packard Telecommunications AB 1998
+//
+// The copyright to the computer program(s) herein is the property of EHPT AB,
+// Sweden. The program(s) may be used and/or copied only with the written 
+// permission from EHPT AB or in accordance with the terms and conditions 
+// stipulated in the agreement/contract under which the program(s) have been 
+// supplied. 
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+//
+// Name:               TSSInternal.idl
+//
+// Product:            TSS
+//
+// Document no:        nn/155 10-CYC 102 02
+//
+// Revision:           PB1
+//
+// Revision date:      1998-02-10
+//
+// Prepared:           EHS/VP EHSRBOD
+//
+// Description:
+// This IDL specification defines the public definitions needed to use TSS.
+//
+//-----------------------------------------------------------------------------
+//
+// Revision History:
+// 
+// Rev      Date            By		      Comments
+// PB1	    1998-02-10      ehsbsk	      Moved internal definitions here 
+//                                            from  TSSDef.idl.
+//
+//-----------------------------------------------------------------------------
+
+#ifndef TSSINTERNAL_IDL
+#define TSSINTERNAL_IDL
+
+#include <TSSDef.idl>
+
+module TSSInternal {
+
+  struct ItemData {
+    boolean auditState;
+    string info;
+  };
+
+  // ItemNotDefined, thrown when an item provided as input data is not defined.
+  exception ItemNotDefined {};
+
+  // SetNotDefined, thrown when an set provided as input data is not defined.
+  exception SetNotDefined {};
+
+  // ItemAlreadyDefined, thrown when an item provided as input data is already
+  // "defined", e.g. included in a set.
+  exception ItemAlreadyDefined {};
+
+  // SetAlreadyDefined, thrown when an set provided as input data is already
+  // "defined", e.g. included in a set.
+  exception SetAlreadyDefined {};
+
+  exception AclEntryNotDefined {};
+  exception TargetNotDefined {};
+  exception ActivitySetNotDefined {};
+  exception TargetGroupNotDefined {};
+  exception ActivityNotDefined {};
+  exception AclEntryAlreadyDefined {};
+  exception TypeNotDefined {};
+  exception TaubTypeNotDefined {};
+  exception TypeAlreadyDefined {};
+  exception TypeMismatch {};
+
+  // DBEntryOverflow, thrown when a greater number of entries than allowed
+  // has been inserted in the data base. Entry is User, Role, Time profile,
+  // Target, Activity etc.
+  exception DBEntryOverflow {};
+
+  
+    const long CAP_TER_INT_COMM_ERROR     	= 6;
+    const long CAP_TER_PROG_FAULT        	= 9;
+    const long CAP_TER_DB_FAULT 		  	= 10;
+    const long CAP_TER_VERSION_MISMATCH   	= 23;
+    const long CAP_TER_SW_ERROR 			= 26;
+    const long CAP_TER_RES_UNAVAIL 			= 28;
+    const long CAP_TER_QUEUE_FULL         	= 29; 
+    const long CAP_TER_QUEUE_OPEN_FAILURE 	= 30; 
+    const long CAP_TER_UNSPEC_ERROR       	= 99;  
+    const long CAP_TER_NO_PROBABLE_CAUSE    = 0;
+  
+  // Definition of constants for specific problem id. 
+  // TSS range: 1 075 300 - 1 075 999
+  // Also used for errNo in exceptions
+
+    const long TSSUndefinedError            = 0;
+    const long StringParamNotDef            = 1075300;
+    const long LongParamNotDef              = 1075301;
+    const long PwEntryNotDef                = 1075302;
+    const long ParamServiceUnavailable      = 1075303;
+    const long PasswordServiceUnavailable   = 1075304;
+    const long EventServiceUnavailable      = 1075305;
+    const long AuthorityServiceUnavailable  = 1075306;
+    const long DbUnavailable                = 1075307;
+    const long DbFailed                     = 1075308;
+    const long FileUnavailable              = 1075309;
+    const long FileNotCorrect               = 1075310;
+    const long PASParameterMissing          = 1075311;
+    const long LoggingQueueProblem          = 1075312;
+
+  // 1 075 400 - 1 075 500 reserved for password.
+
+    const long UndefinedPDBParameterC  = 1075400;
+    const long StoreAlreadyExistsC     = 1075401;
+    const long StoreNotAccessibleC     = 1075402;
+    const long StoreHasBadHeaderC      = 1075403;
+    const long PDBServiceNotAvailableC = 1075404;
+    const long notAuthorizedC          = 1075405;
+    const long serviceNotAvailableC    = 1075406;
+    const long SWErrorC                = 1075407;
+    const long EntryNotDefinedC        = 1075408; 
+    const long StoreNotUpdatableC      = 1075409;
+    const long StoreHasSyntaxErrorC    = 1075410;
+    const long InvalidKeyC             = 1075411;
+    const long EntryAlreadyDefinedC    = 1075412; 
+    const long InvalidPasswordC        = 1075413;
+	const long WeakPasswordC           = 1075414;
+	
+  
+  // 1 075 501 - 1 075 600 reserved for authority
+
+
+    
+
+    const long TargetTypeMismatch	= 1075501; // TargetTypeMismatch  info: target type, activity type
+    const long TargetTypeNotDef	    = 1075502; // TargetTypeNotDef    info: target type
+    const long TargetNotDef         = 1075503; // TargetNotDef        info: target name, target type
+    const long ActivityNotDef       = 1075504; // ActivityNotDef      info: activity name, activity type
+    const long UserNotDef           = 1075505; // UserNotDef          info: user name
+    const long RoleNotDef           = 1075506; // RoleNotDef          info: role name
+    const long SetGroupMismatch     = 1075507; // SetGroupMismatch    info: activity set or target group name and target type
+    const long TooManyLevels        = 1075508; // TooManyLevels       info: activity set or target group name and target type
+    const long ArgumentNull         = 1075509; // ArgumentNull        info: an argument was NULL, must have a value
+    const long RoleNotConnected     = 1075510; // RoleNotConnected    info: a submitted role was not connected to the user
+	const long WrongNoAccessUsage	= 1075511;
+	const long EmptyUserCategory	= 1075512;
+  
+   
+  
+  
+    const long UserWithNoAccess             = 1075513;
+    const long userWithOtherRole            = 1075514;
+    const long noAcessTruncation            = 1075515;
+    const long associationExists            = 1075516;
+    const long ReadonlyUserCategory         = 1075517;
+    const long UserCategoryNotDef           = 1075518;
+    const long RoleToUserCategoryNotDef     = 1075519;
+    const long RoleIsReadOnly               = 1075520; // RoleIsReadOnly 	 info: the given role is read only.
+    const long RoleCollision                = 1075521;
+    const long RoleIsTruncated              = 1075522; // RoleIsTruncated     info: the submitted role is a truncated role.
+
+    const long DeadlockOccured              = 1075523;
+    const long TimeProfileNotDef            = 1075524; // TimeProfileNotDef   info: timeprofile name
+    const long OneLevelTargetGroupError     = 1075525; // Special TG is embedded or embeds other TGs.
+	const long RoleAlreadyDefined           = 1075526; // The role is already created
+    const long InvalidLength                = 1075527; // Length check
+	const long noAccessACL                  = 1075528; // NO_ACCESS ACL
+	const long associationNotExists         = 1075529; // Error handling for remove/removeAclEntry
+    const long OCErrorOccured              = 1075530;
+
+};
+  
+#endif
+

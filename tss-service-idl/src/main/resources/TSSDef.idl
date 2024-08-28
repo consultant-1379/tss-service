@@ -1,0 +1,329 @@
+//-----------------------------------------------------------------------------
+// COPYRIGHT Ericsson Hewlett-Packard Telecommunications AB 1998
+//
+// The copyright to the computer program(s) herein is the property of EHPT AB,
+// Sweden. The program(s) may be used and/or copied only with the written 
+// permission from EHPT AB or in accordance with the terms and conditions 
+// stipulated in the agreement/contract under which the program(s) have been 
+// supplied. 
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+//
+// Name:               TSSDef.idl
+//
+// Product:            TSS
+//
+// Document no:        1/155 10-CYC 102 02
+//
+// Revision:           B
+//
+// Revision date:      1998-04-15
+//
+// Prepared:           EHS/X/VP EHSMACA
+//
+// Description:
+// This IDL specification defines the public definitions needed to use TSS.
+//
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+//
+// Revision History:
+// 
+// Rev  Date         By         Comments
+// A 	1997-09-23   EHSRBOD    First release of TSS.
+// B	1998-04-15   EHSMACA    First release of TSS11.
+//                              Added definitions for password interface.
+//                              Moved internal definitions to internal 
+//                              idl file. 
+// C    1999-05-19   EHSBSK     NamedValue explicitly scoped by CORBA::
+//                              due to change in Orbix3.0 and OrbixWeb3.1.2 
+// D    1999-09-16   EHSJHUA    Add TimeProfile structures for client to get 
+//                              Time Profile Information
+//-----------------------------------------------------------------------------
+
+#ifndef TSSDEF_IDL
+#define TSSDEF_IDL
+//#include <orb.idl>
+
+module TSSDef
+{
+  struct Time {
+    unsigned short hours;
+    unsigned short minutes;
+  };
+
+  struct TimeStampStruct {
+    unsigned long seconds;
+    unsigned long useconds;
+  };
+
+  struct RoleAdminData {
+  	string role;
+  	string info;
+  };
+
+  typedef sequence <RoleAdminData> RoleAdminDataList;
+
+  struct UserAdminData {
+    string user;
+    string name;
+    string dept;
+    string phone;
+    string city;
+    string info;
+  };
+
+  typedef sequence <UserAdminData> UserAdminDataList;
+
+    struct TargetAdminData {
+  		string target;
+  		string type;
+  		string info;
+  };
+
+  typedef sequence <TargetAdminData> TargetAdminDataList;
+
+  struct TargetGroupAdminData {
+    string name;
+    string type;
+    string info;
+  };
+
+  typedef sequence <TargetGroupAdminData> TargetGroupAdminDataList;  
+
+  typedef long Date;  // Seconds since January 1, 1970, 00:00:00 GMT
+
+  struct TSSPasswordRule
+  {
+	long MinLength;
+	long MinAlpha;
+	long MinDigit;
+	long MinLower;
+	long MinUpper;
+	long MinSpecial;
+  };
+
+//-----------------------------------------------------------------------------
+//Struct for ActivityAdmin getAll(char* ) method
+ struct ActivityAdminData{
+    string activity;
+    string type;
+    string taub_type;
+    string info;
+ };
+ 
+ //-----------------------------------------------------------------------------
+//Struct for ActivitySetAdmin getAll(char* ) method
+ struct ActivitySetAdminData{
+    string activity;
+    string type;
+    string info;
+ };
+
+//-----------------------------------------------------------------------------
+
+  const string User =               "User";
+  const string UserCategory =       "UserCategory";
+  const string Role =               "Role";
+
+  // --------------------------------------------------------------------------
+  // Constants for different system types for the password service:
+  // --------------------------------------------------------------------------
+  const string TypeExternalSystem = "ES";
+  const string TypeSqlServer =      "SQL";
+
+  struct TypedString {
+    string value;
+    string type;
+  };
+
+
+  typedef sequence <TypedString> TypedStringList; 
+
+
+  struct SetContents {
+    TypedStringList items;
+    TypedStringList sets;
+  };
+
+  // The following do not work in visibroker idl2java
+  // No Helper class is generated
+  // typedef sequence <CORBA::NameValuePair> NamedValueList;
+  struct NamedValue {
+    string name;
+    any    value;
+  };
+ typedef sequence <NamedValue> NamedValueList;
+  typedef sequence <string> StringList;
+
+struct TreeNode {
+	string nodeName;
+	StringList listOfContents;
+};
+
+typedef sequence <TreeNode> TreeNodeList;
+
+struct ParentTree {
+	string type;
+    TypedStringList parentList;
+    TypedStringList childList;
+};
+
+  struct ListElement {
+    TypedString item;
+    string itemInfo;
+  };
+
+  typedef sequence <ListElement> ListElementSequence;
+
+  // The following do not work in visibroker idl2java
+  // No Helper class is generated
+  // typedef sequence <CORBA::NameValuePair> NamedValueList;
+
+
+//-----------------------------------------------------------------------------
+  struct AuthorityQuery {
+    TSSDef::TypedString user;
+    TSSDef::TypedStringList privileges;
+    TSSDef::TypedString target;
+    TSSDef::TypedString activity;
+    TSSDef::NamedValueList parameters;
+    boolean isAuthorized;
+  };
+
+  typedef sequence <AuthorityQuery> AuthorityQueryList;
+
+//-----------------------------------------------------------------------------
+
+  struct PasswordEntry 
+  { 
+    TSSDef::TypedString system;
+    string account;
+    string info;
+  };
+
+  typedef sequence <PasswordEntry> PasswordEntryList; 
+
+  struct ExtPasswordEntry 
+  { 
+    TSSDef::TypedString system;
+    string account;
+    string password;
+    string info;
+  };
+
+  typedef sequence <ExtPasswordEntry> ExtPasswordEntryList;
+
+//-----------------------------------------------------------------------------
+
+  struct TypeAdminData 
+  { 
+    string type;
+    string info;
+  };
+
+  typedef sequence <TypeAdminData> TypeAdminDataList; 
+
+
+//-----------------------------------------------------------------------------
+// The structure for client side application to get access TimeProfile of
+// certain user:
+// ----------------------------------------------------------------------------
+
+
+struct TSSTimeDateDefined {
+    boolean startTimeDefined;
+    boolean stopTimeDefined;
+    boolean startDateDefined;
+    boolean stopDateDefined;
+  };
+
+struct TSSTimeProfile {
+    string timeProfileId;
+    string timeProfileInfo;
+    TSSDef::Time startTime;
+    TSSDef::Time stopTime;
+    TSSDef::Date startDate;
+    TSSDef::Date stopDate;
+    string dayCat;
+    TSSTimeDateDefined timeDateDefined;
+  };
+   	
+  typedef sequence <TSSTimeProfile> TSSTimeProfileList;
+
+struct TruncatedRole {
+    string role;
+    string parent;
+	TSSDef::TypedString targetGroup;
+  };
+  
+  typedef sequence <TruncatedRole> TruncatedRoleList;
+	
+//-----------------------------------------------------------------------------
+
+  // InvalidPassword is thrown by the PW server if the supplied password
+  // is too long.
+  exception InvalidPassword
+  {
+    long errNo;
+    string password;
+    string explanation;
+  };
+
+  // StoreNotAccessible is thrown by the PW server when the PW file 
+  // is not readable.
+  exception StoreNotAccessible 
+  { 
+    long errNo; 
+    string name; 
+    string explanation;
+  };
+
+  // EntryNotDefined used for any "leaf" or "set" (when distinction isn't
+  // needed).
+  exception EntryNotDefined {
+    long errNo;
+    StringList info; 
+    string explanation;
+  };
+
+  exception InvalidArgument {
+    long errNo;
+    StringList info;
+    string explanation;
+  };
+
+  exception EntryAlreadyDefined
+  {
+    long errNo;
+    StringList info; 
+    string explanation;
+  };
+
+  exception RoleTruncated
+  {
+    long errNo;
+    StringList info;
+    string explanation;
+  };
+
+  exception WeakPassword
+  {
+	long errNo;
+	string explanation;
+  };
+  
+  typedef sequence <long> LongList;
+
+};
+
+//-----------------------------------------------------------------------------
+
+#endif
+
+
+
+
+

@@ -1,0 +1,107 @@
+#ifndef TSSBASICSERV_IDL
+#define TSSBASICSERV_IDL
+
+#include <TSSDef.idl>
+
+module TSSBasic
+{
+  enum ServerName {AUTH,PW,BS};
+
+  interface TssErrorReporting {
+    
+    void setLogName(in ServerName name, in string FDN);
+
+    void report(in string hostname,
+		in string objectOfReference, 
+		in string programName,
+		in string procName,
+		in string problemData,
+		in long specificProblemId, // also known as indirect_return_code
+		in long probableCause,
+		in string className,
+		in string methodName);
+    // Description:
+    //     To report a problem to CIF Error Log
+
+
+   void security(in ServerName server,
+                 in string info,
+                 in string user_id,
+                 in string command_name,
+                 in string event_type,
+                 in string severity_level);
+   // Description:
+   // Logs an entry in the CIF Security Log
+   // @param dn Distinguished Name of the sender.
+   // @param info Additional information
+   // @param user_id User iniating the operation that caused this event.
+   // @param command_name Name of the command that was executed.
+   // @param event_type Type of security event.
+   // @param severity_level The severity level.
+
+  };
+
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+  
+  interface TssParameterService {
+    
+    string getStringParam(in string paramName)
+      raises(TSSDef::EntryNotDefined);
+    // Description:
+    //     get a string parameter from the parameter database in TBS
+    // Parameters:
+    //     paramName       IN: the name of the parameter
+    // Return value:
+    //     The value of the parameter.
+    // Exceptions:
+    //     EntryNotDefined    No parameter with the specified key was defined.
+    //                        The errNo is set to String or LongParamNotDefined,
+    //                        respectively. info[0] contains the name of the 
+    //                        undefined parameter.
+     
+// ----------------------------------------------------------------------------
+
+    long getLongParam(in string paramName)
+      raises(TSSDef::EntryNotDefined);
+    // Description:
+    //     get a long parameter from the parameter database in TBS
+    // Parameters:
+    //     paramName       IN: the name of the parameter
+    // Return value:
+    //     The value of the parameter.
+    // Exceptions:
+    //     EntryNotDefined    No parameter with the specified key was defined.
+    //                        The errNo is set to String or LongParamNotDefined,
+    //                        respectively. info[0] contains the name of the
+    //                        undefined parameter.
+
+// -----------------------------------------------------------------------------
+
+    void changeStringParam(in string paramName, in string paramValue)
+        raises(TSSDef::EntryNotDefined);
+
+    // Description:
+    //     change a string parameter in the parameter database in PAS
+    // Parameters:
+    //     paramName       IN: the name of the parameter
+    //     paramValue      IN: the new value of the parameter
+    // Return value:
+    //     void
+    // Exceptions:
+    //     EntryNotDefined    No parameter with the specified key was defined.
+    //                        The errNo is set to StringParamNotDefined,
+    //                        respectively. info[0] contains the name of the 
+    //                        undefined parameter.
+ 
+  };
+};
+
+#endif
+
+
+
+
+
+

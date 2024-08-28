@@ -1,0 +1,119 @@
+// ----------------------------------------------------------------------------
+// COPYRIGHT Ericsson Hewlett-Packard Telecommunications AB 1998
+//
+// The copyright to the computer program(s) herein is the property of EHPT AB,
+// Sweden. The program(s) may be used and/or copied only with the written 
+// permission from EHPT AB or in accordance with the terms and conditions 
+// stipulated in the agreement/contract under which the program(s) have been 
+// supplied. 
+// ----------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------
+//
+// Name:               TSSPWAdmin.idl
+//
+// Product:            TSS
+//
+// Document no:        nn/155 10-CYC 102 02
+//
+// Revision:           PB6
+//
+// Prepared:           EHS/VP EHSMSG
+//
+// Description:        This file defines the interface between the PW CLI
+//                     and the PW server. This interface is internal to TSS
+//                     and should not be used by other applications. Most of
+//                     the PW functions are moved to the external interface 
+//                     in TSS.idl.
+//
+//                     When exception  InvalidKey is raised, the attribute key
+//                     contains the specified key.
+//
+// ----------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------
+//
+// Revision History:
+// 
+// Rev      Date            By		      Comments
+// 
+// A        1997-05-23      EHSMSG            First released version.
+// PB2      1998-01-13      QHSJODY           Added exception. Cleaned up.
+// PB3      1998-02-02      EHSBSK/QHSJODY    Moved most functions to TSS.idl.
+// PB4      1998-02-10      EHSBSK            Doc.no changed.
+// PB5      1998-02-19      QHSJODY           Added explanation to InvalidKey.
+// PB6      1998-03-03      QHSJODY           Removed getPasswordAdmin.
+//
+// ----------------------------------------------------------------------------
+
+#ifndef TSSPWAdmin_idl
+#define TSSPWAdmin_idl
+
+#include <TSSDef.idl>
+
+// ----------------------------------------------------------------------------
+
+module TSSPWAdmin
+{
+  // --------------------------------------------------------------------------
+  // Exceptions: 
+  // --------------------------------------------------------------------------
+
+  exception StoreAlreadyExists 
+  { 
+    long errNo; 
+    string name; 
+    string explanation;
+  }; 
+
+  exception InvalidKey
+  {
+    long errNo;
+    string key;
+    string explanation;
+  };
+
+  // --------------------------------------------------------------------------
+  // Interface passwordAdmin:
+  // --------------------------------------------------------------------------
+
+  interface passwordAdmin 
+  {
+    void changeKey(in string newKey,
+		   in TSSDef::TypedString user,
+		   in TSSDef::TypedStringList privileges)
+      raises (TSSDef::StoreNotAccessible, InvalidKey);
+    // Description:
+    //     To update the key the PWs are encrypted with when they are written
+    //     to the PW store. This causes all PWs to be written to the PW store
+    //     encrypted using the new key. The encryption key may not be empty.
+    // Parameters:
+    //     newKey             IN: the encryption key
+    //     user               IN: the user trying to update the key
+    //     privileges         IN: the user's privileges
+    // Exceptions:
+    //     InvalidKey         The specified key was invalid, i.e. empty.
+    //     StoreNotAccessible The PW store could not be accessed.
+  };
+
+  // --------------------------------------------------------------------------
+  // Interface passwordAdminFactory:
+  // --------------------------------------------------------------------------
+
+  interface passwordAdminFactory 
+  { 
+    void createEmptyPasswordStore() 
+      raises(StoreAlreadyExists, TSSDef::StoreNotAccessible);
+    // Description:
+    //     To create a new PW store. This method should only be called once
+    //     and that is when TSS is installed. It creates a new, empty PW store.
+    // Exceptions:
+    //     StoreAlreadyExists The PW store has already been created, i.e. this
+    //                        method has been called before.
+    //     StoreNotAccessible The PW store could not be accessed.
+  };
+};
+
+// ----------------------------------------------------------------------------
+
+#endif

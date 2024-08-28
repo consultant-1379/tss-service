@@ -1,0 +1,108 @@
+//-----------------------------------------------------------------------------
+// COPYRIGHT Ericsson Hewlett-Packard Telecommunications AB 1998
+//
+// The copyright to the computer program(s) herein is the property of EHPT AB,
+// Sweden. The program(s) may be used and/or copied only with the written
+// permission from EHPT AB or in accordance with the terms and conditions
+// stipulated in the agreement/contract under which the program(s) have been
+// supplied.
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+//
+// Name:               TSSNotifDef.idl
+//
+// Product:            TSS
+//
+// Document no:        
+//
+// Revision:           
+//
+// Revision date:      2011-03-28
+//
+// Prepared:           ETH/XKY EGZAHUS
+//
+// Description:
+// This IDL specification defines the public definitions needed to use TSS notifications.
+//
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+//
+// Revision History:
+//
+// Rev  Date         By         Comments
+// A 	2011-03-28   EGZAHUS    First release of TSS Notification Handler.
+//-----------------------------------------------------------------------------
+
+#ifndef TSSNOTIFDEF_IDL
+#define TSSNOTIFDEF_IDL
+
+#include <TSSDef.idl>
+
+module TSSNotifDef
+{
+  /*
+   * Enumeration type which defines the value set of operations used to categorize the TSS notifications
+   * TARGETS_ADDED: the added targets have to be added to the appropriate user's the cached target set
+   * TARGETS_REMOVED: the removed targets have to be removed from the user's cached target set
+   * TARGETS_UPDATED_LIST: the user's cached target set has to be updated with that target list sent with this notification
+   * TARGETS_UPDATED_ALL: the user's cache entry has to be removed and re-loaded from TSS upon the next request of cache
+   * CACHE_FLUSH: the all cache entries have to be removed and re-loaded from TSS upon the next request of cache
+   */
+  enum OperationType {TARGETS_ADDED,TARGETS_REMOVED,TARGETS_UPDATED_LIST,TARGETS_UPDATED_ALL,CACHE_FLUSH};
+
+  /*
+   * This struct defines the structure of notifications are sent by TSS Notification Handler.
+   */
+  struct TssNotificationBody {
+	/*
+	 * This is the sequence number of notification. It is unsigned long where the range is 32 bit: 0 .. 2^32 - 1.
+	 * The sequence number can be used for the subscribers of TSS notifications to check the notification losing.
+	 * When the sequence number of got TSS notifcation is not bigger by 1 than the sequence number of last got TSS notification then one or more notifications lost.
+	 * In case of discovered message losing the the workflow of cache has to follow that flow when it gets a "CACHE_FLUSH" notification.
+	 * When the sequence number is turned over the caches discover it as case of messsage losing. 
+	 * It is possible after some years of TSS working without restarting.
+	 */
+	unsigned long sequence_number_type;
+
+	/*
+	 * Authorization type: It is used to decide the meaning of notifications.
+	 * In case of TBAC ambition level-0 it is "visible".
+	 */
+	string authorizationType;
+	
+	/*
+	 * Operation is used to define the meaning of next attributes.
+	 * An enumeration is used for it. Its values can be seen above.
+	 */
+	OperationType operation;
+	 
+	/* 
+	 * In case of "visible" authorization type it means that the user(s) can see either the all or none targets.
+	 * It is is set(1) when the ALL_NE_GROUP is assigned as visible target group for the user(s).
+	 */
+	 boolean all_targets;
+	 
+	/*
+	 * impactedUsers contains the all users whose cache entry has to be updated.
+	 */
+	TSSDef::TypedStringList impactedUsers;
+	 
+	/* 
+	 * impactedTargets contains the targets with which the cache entries have to be updated.
+	 */
+	TSSDef::TypedStringList impactedTargets;
+  };
+  
+
+};
+
+//-----------------------------------------------------------------------------
+
+#endif
+
+
+
+
+

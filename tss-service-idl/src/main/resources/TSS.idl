@@ -1,0 +1,415 @@
+/**
+ * (C) COPYRIGHT Ericsson Radio Systems  AB 2001
+ * <p>
+ *  The copyright to the computer program(s) herein is the property
+ *  of ERICSSON RADIO SYSTEMS  AB, Sweden. The programs may be used
+ *  and/or copied only with the written permission from ERICSSON
+ *  RADIO SYSTEMS AB or in accordance with the terms and conditions
+ *  stipulated in the agreement/contract under which the program(s)
+ *  have been supplied.
+ * </p>
+ */
+
+#ifndef TSS_IDL
+#define TSS_IDL
+
+#include <TSSDef.idl>
+
+/**
+ * This IDL specification defines the public interfaces of TSS.
+ */
+module TSS 
+{
+  /**
+   * The Authority interface handles the association users,
+   * privileges, tagets and activities.
+   */
+  interface Authority {
+   /**
+    * Check if the user with the supplied privileges is authorized to 
+    * perform the specified activity on the specified target. The parameters
+    * argument is currently not used.
+    *
+    * @param user             the user 
+    * @param privileges       the user's privileges
+    * @param target           for ex. a Network Element, 
+    *                           or an TMOS application  
+    * @param activity         for ex. an MML-command or a TMOS 
+    *                           activity "Start GUI" 
+    * @param parameters       NOT USED YET! parameters or flags for the activity
+    *                            for ex. EXROP:R=ALL, where R is a parameter.
+    * @throws InvalidArguemt  if any of the supplied data doesn't exist
+    */
+    boolean isAuthorized(in TSSDef::TypedString user,
+			 in TSSDef::TypedStringList privileges,
+			 in TSSDef::TypedString target,
+			 in TSSDef::TypedString activity,
+			 in TSSDef::NamedValueList parameters)
+      raises(TSSDef::InvalidArgument);
+
+  
+   /** 
+    * To check authority for a number of queries at the same time.
+    * See isAuthorized above.
+    * Assigns true or false to queryList[i].isAuthorized, 
+    *     where 0 <= i < queryList.length()
+    */
+    void isAuthorizedBatch(inout TSSDef::AuthorityQueryList queryList)
+      raises(TSSDef::InvalidArgument);
+ 
+    /**
+     * This method is for aplications that creates their own cache.
+     * It returns the last time anything was removed or modified in the
+     * TSS database.
+     */
+    void getLastChangeTimeStamp(out unsigned long seconds, out unsigned long useconds);
+
+    /**
+     * It returns the last time anything was removed or modified in the
+     * TSS database with the given type. Modification of Roles and Users
+     * will not affect this
+     */
+    TSSDef::TimeStampStruct getLastChangedTimeStamp(in string type)
+        raises(TSSDef::EntryNotDefined);
+        
+    /**
+     * This method is used by applications to fetch the privileges of a
+     * user. This is a list of roles.An application that wants to support 
+     * separation of duties can present the list of allowed roles
+     * to the user and let him or her choose the privileges (roles)
+     * to use in a particular session.
+     * The application will then include the chosen privileges in the calls
+     * to isAuthorized.
+     * 
+     * @param user the user 
+     *
+     * @throws TSSDef::InvalidArgument if the suer is not found
+     */
+    TSSDef::TypedStringList getPrivileges(in TSSDef::TypedString user)
+      raises(TSSDef::InvalidArgument);
+
+
+    /**
+     * List all activities the user with the supplied privileges is
+     * authorized to perform on the target.
+     * 
+     * @param user            the user 
+     * @param privileges      the user's privileges
+     * @param target          the the target that the returned activities can
+     *                          be performed on.
+     */
+    TSSDef::TypedStringList 
+      getAllowedActivities(in TSSDef::TypedString user,
+			   in TSSDef::TypedStringList privileges,
+			   in TSSDef::TypedString target)
+      raises(TSSDef::InvalidArgument);
+
+
+    /**
+     * List all Targets the user with the supplied privileges is authorized
+     * to perform the activity on.
+     *
+     * @param user             the user 
+     * @param privileges       the user's privileges
+     * @param activity         the the activity that the user wants to perform
+     */
+    TSSDef::TypedStringList
+      getAllowedTargets(in TSSDef::TypedString user,
+			in TSSDef::TypedStringList privileges,
+			in TSSDef::TypedString activity)
+      raises(TSSDef::InvalidArgument);
+
+    /**
+     * List all Targets the user is authorized to perform the activities contained by the supplied authorization type.
+     *
+     * @param user                      the user 
+     * @param authorizationTypeName     the authorizationTypeName which contains activity that the user wants to perform
+	 * @param targetTypeFilter			the targetType the targetList is filtered with.
+     */
+     
+    TSSDef::TypedStringList
+      getAuthorizedTargets(in TSSDef::TypedString user,
+			in string authorizationTypeName, in string targetTypeFilter)
+      raises(TSSDef::EntryNotDefined);
+     
+	 /**
+     * List all TargetGroups the user is authorized to perform the activities contained by the supplied authorization type.
+     *
+     * @param user                      the user 
+     * @param authorizationTypeName     the authorizationTypeName which contains activity that the user wants to perform
+	 * @param targetTypeFilter			the targetType the targetGroupList is filtered with.
+     */
+     
+    TSSDef::TypedStringList
+      getAuthorizedTargetGroups(in TSSDef::TypedString user,
+			in string authorizationTypeName, in string targetTypeFilter)
+      raises(TSSDef::EntryNotDefined);
+  
+
+    /**
+     * List all users defined in TSS
+     */ 
+    TSSDef::TypedStringList listAllUsers ();
+  };
+
+  /**
+   * The password interface.
+   */
+  interface Password 
+  {
+    /**
+     * To get a specified PW. A PW entry key consists of three strings -
+     * the system type, the system name and the account.
+     *
+     * @param system          the name and type of the system 
+     *                            that identifies the PW entry 
+     * @param account         the account that identifies the PW entry
+     * @param user            the user trying to get the PW
+     * @param privileges      the user's privileges
+     * 
+     * @return                The requested password
+     * 
+     * @throws EntryNotDefined  No PW entry with the specified key was defined.
+     * @throws StoreNotAccessible The PW store could not be accessed.
+     */
+    string getPassword(in TSSDef::TypedString system,
+		       in string account,
+		       in TSSDef::TypedString user,
+		       in TSSDef::TypedStringList privileges)
+      raises(TSSDef::EntryNotDefined, TSSDef::StoreNotAccessible);
+
+    /** 
+     * To create a new PW entry.
+     * 
+     * @param system          the name and type of the system 
+     *                            that identifies the PW entry 
+     * @param account         the account that identifies the PW entry
+     * @param password        the PW
+     * @param info            additional info about the PW
+     * @param user            the user trying to create the PW entry
+     * @param privileges      the user's privileges
+     *
+     * @throws EntryAlreadyDefined  A PW entry with the specified 
+     *                                system and account was already defined.
+     * @throws StoreNotAccessible   The PW store could not be accessed.
+     * @throws InvalidPassword      The PW was too long.
+     */
+    void create(in TSSDef::TypedString system,
+		in string account,
+		in string password,
+		in string info,
+		in TSSDef::TypedString user,
+		in TSSDef::TypedStringList privileges)
+      raises (TSSDef::EntryAlreadyDefined, 
+	      TSSDef::StoreNotAccessible,
+	      TSSDef::InvalidPassword);
+
+    /**
+     * To update a specified PW entry with a new PW.
+     * 
+     * @param system          the name and type of the system 
+     *                            that identifies the PW entry 
+     * @param account         the account that identifies the PW entry
+     * @param password        the PW
+     * @param user            the user trying to update the PW entry
+     * @param privileges      the user's privileges
+     *
+     * @throws EntryNotDefined    No PW entry with the specified key was defined.
+     * @throws StoreNotAccessible The PW store could not be accessed.
+     * @throws InvalidPassword    The PW was too long.
+     */
+    void update(in TSSDef::TypedString system,
+		in string account,
+		in string newPassword,
+		in TSSDef::TypedString user,
+		in TSSDef::TypedStringList privileges)
+      raises (TSSDef::EntryNotDefined, 
+	      TSSDef::StoreNotAccessible, 
+	      TSSDef::InvalidPassword);
+
+    /**
+     * To remove a specified PW entry.
+     *
+     * @param system          the name and type of the system 
+     *                            that identifies the PW entry 
+     * @param account         the account that identifies the PW entry
+     * @param user            the user trying to remove the PW entry
+     * @param privileges      the user's privileges
+     *
+     * @throws EntryNotDefined    No PW entry with the specified key was defined.
+     * @throws StoreNotAccessible The PW store could not be accessed.
+     */
+    void remove(in TSSDef::TypedString system,
+		in string account,
+		in TSSDef::TypedString user,
+		in TSSDef::TypedStringList privileges)
+      raises (TSSDef::EntryNotDefined, TSSDef::StoreNotAccessible);
+
+    /** 
+     * To update a specified PW entry with new PW info.
+     *
+     * @param system          the name and type of the system 
+     *                            that identifies the PW entry 
+     * @param account         the account that identifies the PW entry
+     * @param info            the new info
+     * @param user            the user trying to update the PW entry
+     * @param privileges      the user's privileges
+     *  
+     * @throws EntryNotDefined    No PW entry with the specified key was defined.
+     * @throws StoreNotAccessible The PW store could not be accessed.
+     */
+    void setInfo(in TSSDef::TypedString system,
+		 in string account,
+		 in string info,
+		 in TSSDef::TypedString user,
+		 in TSSDef::TypedStringList privileges)
+      raises (TSSDef::EntryNotDefined, TSSDef::StoreNotAccessible);
+
+    /**
+     * To get the PW info for a specified PW entry.
+     * 
+     * @param system           the name and type of the system 
+     *                             that identifies the PW entry 
+     * @param account          the account that identifies the PW entry
+     * 
+     * @return     The PW info.
+     * 
+     * @throws EntryNotDefined    No PW entry with the specified key was defined.
+     * @throws StoreNotAccessible The PW store could not be accessed.
+     */
+    string getInfo(in TSSDef::TypedString system,
+		   in string account)
+      raises (TSSDef::EntryNotDefined, TSSDef::StoreNotAccessible);
+
+    /**
+     * To get all PW entries in the PW store.
+     * Note that the PasswordEntry objects in the returned list do not 
+     * contain the actual PWs. To get the PWs, the method 
+     * getPassword must be used.
+     * 
+     * @return  The list of all PW entries in the PW store.
+     * 
+     * @throws  StoreNotAccessible The PW store could not be accessed.
+     */
+    TSSDef::PasswordEntryList getAll() 
+      raises (TSSDef::StoreNotAccessible);
+
+    /**
+     * Get PW entries for a certain system and type.
+     *
+     * @param system            The name and type of the system 
+     *                            that identifies the PW entries
+     *                            If the type is set to an empty
+     *                            string, all entries for that 
+     *                            system is returned.
+     *
+     * @return  A list of PW entries
+     *
+     * @throws StoreNotAccessible The PW store could not be accessed.
+     */
+    TSSDef::PasswordEntryList getAccounts(in TSSDef::TypedString system)
+      raises (TSSDef::StoreNotAccessible);
+  
+  	/**
+     * To get all those PW entries in the PW store
+     * where the password not complex enough according to
+     * the password policy.
+     * Note that the PasswordEntry objects in the returned list do not 
+     * contain the actual PWs. To get the PWs, the method 
+     * getPassword must be used.
+     * 
+     * @return  The list of all the weak PW entries in the PW store.
+     * 
+     * @throws  StoreNotAccessible The PW store could not be accessed.
+     */
+    TSSDef::PasswordEntryList complexityCheck(in TSSDef::TypedString user) 
+      raises (TSSDef::StoreNotAccessible);
+      
+   /** 
+     * To create a new PW entry with password complexity check.
+     * 
+     * @param system          the name and type of the system 
+     *                            that identifies the PW entry 
+     * @param account         the account that identifies the PW entry
+     * @param password        the PW
+     * @param info            additional info about the PW
+     * @param user            the user trying to create the PW entry
+     * @param privileges      the user's privileges
+     *
+     * @throws EntryAlreadyDefined  A PW entry with the specified 
+     *                                system and account was already defined.
+     * @throws StoreNotAccessible   The PW store could not be accessed.
+     * @throws InvalidPassword      The PW was too long.
+     * @throws WeakPassword         The PW was not valid against the complexity rules.
+     */
+    void createWithCheck(in TSSDef::TypedString system,
+		in string account,
+		in string password,
+		in string info,
+		in TSSDef::TypedString user,
+		in TSSDef::TypedStringList privileges)
+      raises (TSSDef::EntryAlreadyDefined, 
+	      TSSDef::StoreNotAccessible,
+	      TSSDef::InvalidPassword,
+	      TSSDef::WeakPassword);
+	      
+	 
+    /**
+     * To update a specified PW entry with a new PW.
+     * 
+     * @param system          the name and type of the system 
+     *                            that identifies the PW entry 
+     * @param account         the account that identifies the PW entry
+     * @param password        the PW
+     * @param user            the user trying to update the PW entry
+     * @param privileges      the user's privileges
+     *
+     * @throws EntryNotDefined    No PW entry with the specified key was defined.
+     * @throws StoreNotAccessible The PW store could not be accessed.
+     * @throws InvalidPassword    The PW was too long.
+     * @throws WeakPassword         The PW was not valid against the complexity rules.
+     */
+    void updateWithCheck(in TSSDef::TypedString system,
+		in string account,
+		in string newPassword,
+		in TSSDef::TypedString user,
+		in TSSDef::TypedStringList privileges)
+      raises (TSSDef::EntryNotDefined, 
+	      TSSDef::StoreNotAccessible, 
+	      TSSDef::InvalidPassword,
+          TSSDef::WeakPassword);
+     
+    /**
+     * Get the current password complexity rules.
+     *
+     * @return A structure with the current password complexity rules.
+     */
+	 TSSDef::TSSPasswordRule getRule();
+	 
+  
+  	/**
+     * Import PW entries to the PW store. This funcion can 
+	 * be run only for trustedUsers.
+     * 
+	 * @param list            the PW entries to be stored in PW store
+	 * @param user            the user
+	 *
+     *
+     * @throws EntryAlreadyDefined  A PW entry with the specified 
+     *                                system and account was already defined.
+     * @throws StoreNotAccessible   The PW store could not be accessed.
+     * @throws InvalidPassword      The PW was too long.
+     */
+    void importPasswords(in TSSDef::ExtPasswordEntryList list,
+							in TSSDef::TypedString user) 
+       raises (TSSDef::EntryAlreadyDefined, 
+	      TSSDef::StoreNotAccessible,
+	      TSSDef::InvalidPassword);
+	};
+};
+
+#endif
+
+
+
+

@@ -1,0 +1,65 @@
+// ----------------------------------------------------------------------------
+// COPYRIGHT Ericsson Hewlett-Packard Telecommunications AB 1998
+//
+// The copyright to the computer program(s) herein is the property of EHPT AB,
+// Sweden. The program(s) may be used and/or copied only with the written 
+// permission from EHPT AB or in accordance with the terms and conditions 
+// stipulated in the agreement/contract under which the program(s) have been 
+// supplied. 
+// ----------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------
+//
+// Name:               TSSAuth.idl
+//
+// Product:            TSS
+//
+// Document no:        nn/155 10-CYC 102 02
+//
+// Revision:           PA1
+//
+// Revision date:      1998-02-10
+//
+// Description:
+// This IDL specification defines the authority part of the internal TSS idl.
+//
+// ----------------------------------------------------------------------------
+// Revision History:
+// 
+// Rev      Date            By		      Comments
+// PA1	    1997-02-10	    ehsbsk 	      First revision.
+//
+//
+// ----------------------------------------------------------------------------
+
+#ifndef TSSAUTH_IDL
+#define TSSAUTH_IDL
+
+
+module TSSAuth 
+{
+  interface AuthAdmin {
+    oneway void clearCache();
+    
+    // Description:
+    //    Tells the Authority Server to clear its cache, because the data in the
+    //    database has changed
+
+  };
+};
+
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
